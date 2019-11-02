@@ -6,7 +6,7 @@
  * @flow
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StyleSheet, View, Dimensions} from 'react-native';
 
 import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
@@ -14,12 +14,12 @@ import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 const {width, height} = Dimensions.get('window');
 
 const ASPECT_RATIO = width / height;
-const LATITUDE = 37.78825;
-const LONGITUDE = -122.4324;
+const LATITUDE = -36.8509178;
+const LONGITUDE = 174.7654861;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-const Map: () => React$Node = () => {
+function Map(props) {
   return (
     <>
       <View style={styles.container}>
@@ -32,11 +32,16 @@ const Map: () => React$Node = () => {
             latitudeDelta: LATITUDE_DELTA,
             longitudeDelta: LONGITUDE_DELTA,
           }}
+          showsUserLocation={true}
+          showsMyLocationButton={true}
+          loadingEnabled={true}
+          onPress={e => props.onPress(e.nativeEvent)}
+          onLongPress={e => console.log('long', e.nativeEvent)}
         />
       </View>
     </>
   );
-};
+}
 
 Map.propTypes = {
   provider: MapView.ProviderPropType,
@@ -45,7 +50,6 @@ Map.propTypes = {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    top: 100,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

@@ -1,33 +1,33 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
-import React from 'react';
-import {StyleSheet, View, StatusBar} from 'react-native';
-
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-
+import React, {useState} from 'react';
+import {StyleSheet, View} from 'react-native';
 import Map from './Map';
+import SearchInput from './components/SearchInput';
+import DestinationList from './components/DestinationList';
 
 const App: () => React$Node = () => {
+  const [isShow, setVisibility] = useState(true);
+
+  function toggleView(event) {
+    console.log('short', event);
+    setVisibility(!isShow);
+  }
   return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <View style={{flex: 1}}>
-        <Map />
-      </View>
-    </>
+    <View style={styles.container}>
+      {isShow && <SearchInput />}
+
+      <Map onPress={toggleView} />
+
+      {isShow && <DestinationList />}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  }
 });
 
 export default App;
