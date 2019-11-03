@@ -11,55 +11,85 @@ import {
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-const SearchInput: () => React$Node = () => {
-  const defaultItems = [
-    {key: 'a'},
-    {key: 'b'},
-    {key: 'c'},
-    {key: 'd'},
-    {key: 'e'},
-    {key: 'f'},
-    {key: 'g'},
-    {key: 'h'},
-    {key: 'i'},
-    {key: 'j'},
-    {key: 'k'},
-    {key: 'l'},
-    {key: 'm'},
-    {key: 'n'},
-    {key: 'o'},
-    {key: 'p'},
-    {key: 'q'},
-    {key: 'r'},
-  ];
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState(defaultItems);
+function SearchInput(props) {
+  const options = {
+    key: 'Your API KEY',
+    region: 'nz',
+    types: ['address'],
+    fields: ['address_components', 'geometry.location', 'name'],
+  };
+  // const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const [nextPageToken, setNextPageToken] = useState(null);
 
-  function loadData(refreshing) {
-    console.log('fired');
-    let data = [];
-    if (refreshing) {
-      setLoading(true);
-      setItems(defaultItems);
-    }
-    setTimeout(() => {
-      if (!refreshing) {
-        data = items.concat(defaultItems);
-        setItems(data);
-      }
-      setLoading(false);
-    }, 2000);
-  }
   function getIndicator() {
+    if (nextPageToken) {
+      return (
+        <View styles={styles.indicatorContainer}>
+          <ActivityIndicator style={styles.indicator} animating={true} />
+          <Text>Loading...</Text>
+        </View>
+      );
+    }
     return (
       <View styles={styles.indicatorContainer}>
-        <ActivityIndicator style={styles.indicator} animating={true} />
-        <Text>Loading...</Text>
+        <Text style={styles.indicator}> No more results. </Text>
       </View>
     );
   }
-  function getGeoLocation(text) {
-    console.log(text);
+  /**
+   * Convert an object into query parameters.
+   * @param {Object} object Object to convert.
+   * @returns {string} Encoded query parameters.
+   */
+  function toQueryParams(object) {
+    return Object.keys(object)
+      .filter(key => !!object[key])
+      .map(key => key + '=' + encodeURIComponent(object[key]))
+      .join('&');
+  }
+  async function getPlacesFromGoogle(queryParams) {
+    // build url
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${toQueryParams(
+      queryParams,
+    )}`;
+    let data;
+    await fetch(url)
+      .then(response => response.json())
+      .then(responseJson => {
+        data = Promise.resolve(responseJson);
+      })
+      .catch(error => {
+      });
+    return data;
+  }
+
+  async function getPlaces(text) {
+    let queryParams = {...options, query: text};
+    let places = await getPlacesFromGoogle(queryParams);
+    setItems(places.results);
+    setNextPageToken(places.next_page_token);
+  }
+
+  async function getNextPagePlaces() {
+    if (nextPageToken) {
+      let queryParams = {...options, pagetoken: nextPageToken};
+      let places = await getPlacesFromGoogle(queryParams);
+      Array.prototype.push.apply(items, places.results);
+      setItems(items);
+      setNextPageToken(places.next_page_token);
+    }
+  }
+
+  function placeItem(item) {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          props.addDestination(item);
+        }}>
+        <Text>{item.formatted_address}</Text>
+      </TouchableOpacity>
+    );
   }
   return (
     <View style={styles.container}>
@@ -67,30 +97,20 @@ const SearchInput: () => React$Node = () => {
         <FontAwesome style={styles.searchIcon} name={'search'} />
         <TextInput
           style={styles.input}
-          onChangeText={text => getGeoLocation(text)}
+          onChangeText={text => getPlaces(text)}
           placeholder={'Search here'}
         />
       </View>
       <FlatList
         style={styles.itemList}
         data={items}
-        refreshing={loading}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            onPress={() => {
-              () => {};
-            }}>
-            <Text>{item.key}</Text>
-          </TouchableOpacity>
-        )}
-        onRefresh={() => {
-          loadData(true);
-        }}
+        renderItem={({item}) => placeItem(item)}
         ListFooterComponent={() => getIndicator()}
-        onEndReached={() => loadData()}
-        initialListSize={10}
-        pageSize={10}
-        onEndReachedThreshold={1}
+        onEndReached={() => getNextPagePlaces()}
+        initialListSize={20}
+        pageSize={20}
+        onEndReachedThreshold={0.01}
+        keyExtractor={item => item.id}
       />
     </View>
   );
@@ -98,7 +118,6 @@ const SearchInput: () => React$Node = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     top: 50,
     marginLeft: 10,
     marginRight: 10,

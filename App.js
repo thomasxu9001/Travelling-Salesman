@@ -6,18 +6,33 @@ import DestinationList from './components/DestinationList';
 
 const App: () => React$Node = () => {
   const [isShow, setVisibility] = useState(true);
+  const [destinationList, setDestinationList] = useState([]);
 
-  function toggleView(event) {
-    console.log('short', event);
+  function toggleView() {
     setVisibility(!isShow);
+  }
+  function addDestination(item) {
+    let newList = [...destinationList];
+    newList.push(item);
+    setDestinationList(newList);
+  }
+  function removeDestination(index) {
+    let newList = [...destinationList];
+    newList.splice(index, 1);
+    setDestinationList(newList);
   }
   return (
     <View style={styles.container}>
-      {isShow && <SearchInput />}
+      {isShow && <SearchInput addDestination={item => addDestination(item)} />}
 
       <Map onPress={toggleView} />
 
-      {isShow && <DestinationList />}
+      {isShow && (
+        <DestinationList
+          destinationList={destinationList}
+          removeDestination={index => removeDestination(index)}
+        />
+      )}
     </View>
   );
 };
@@ -27,7 +42,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
-  }
+  },
 });
 
 export default App;
