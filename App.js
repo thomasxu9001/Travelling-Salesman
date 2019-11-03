@@ -4,8 +4,8 @@ import Map from './Map';
 import SearchInput from './components/SearchInput';
 import DestinationList from './components/DestinationList';
 import ConfirmFooter from './components/ConfirmFooter';
-import NotificationsIOS from 'react-native-notifications/lib/src/index.ios';
-import moment from 'moment';
+// import NotificationsIOS from 'react-native-notifications/lib/src/index.ios';
+// import moment from 'moment';
 
 const App: () => React$Node = () => {
   const [isShow, setVisibility] = useState(true);
@@ -36,22 +36,22 @@ const App: () => React$Node = () => {
       newList.push({...item, id: item.place_id});
       setDestinationList(newList);
       // Set notification
-      if (notificationId) {
-        NotificationsIOS.cancelLocalNotification(notificationId);
-      }
-      let fiveMinutesLater = moment();
-      fiveMinutesLater.set({minute: fiveMinutesLater.get('minute') + 5});
-      console.log(fiveMinutesLater);
-      let newNotificationId = NotificationsIOS.localNotification({
-        fireDate: fiveMinutesLater,
-        body: item.formatted_address,
-        title: 'The last place you added',
-        sound: 'chime.aiff',
-        silent: false,
-        category: 'Travelling Salesman',
-        userInfo: {},
-      });
-      setNotificationId(newNotificationId);
+      // if (notificationId) {
+      //   NotificationsIOS.cancelLocalNotification(notificationId);
+      // }
+      // let fiveMinutesLater = moment();
+      // fiveMinutesLater.set({minute: fiveMinutesLater.get('minute') + 5});
+      //
+      // let newNotificationId = NotificationsIOS.localNotification({
+      //   fireDate: fiveMinutesLater,
+      //   body: item.formatted_address,
+      //   title: 'The last place you added',
+      //   sound: 'chime.aiff',
+      //   silent: false,
+      //   category: 'Travelling Salesman',
+      //   userInfo: {},
+      // });
+      // setNotificationId(newNotificationId);
     }
   }
   function removeDestination(index) {

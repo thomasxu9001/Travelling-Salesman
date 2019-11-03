@@ -62,6 +62,8 @@ function SearchInput(props) {
     return (
       <TouchableOpacity
         onPress={() => {
+          setItems([]);
+          setSearchVal(null);
           props.addDestination(item);
         }}>
         <View style={styles.placeItem}>
