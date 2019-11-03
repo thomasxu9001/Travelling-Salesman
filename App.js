@@ -12,7 +12,7 @@ const App: () => React$Node = () => {
   const [pinedPlace, setPinedPlace] = useState();
   const [markerDetail, setMarkerDetail] = useState();
   const options = {
-    key: 'Your api key',
+    key: 'Your API Key',
     region: 'nz',
     types: ['address'],
     fields: ['address_components', 'geometry.location', 'name'],
@@ -30,7 +30,7 @@ const App: () => React$Node = () => {
     });
 
     if (!matchAddress) {
-      newList.push(item);
+      newList.push({...item, id: item.place_id});
       setDestinationList(newList);
     }
   }

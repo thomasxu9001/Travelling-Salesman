@@ -56,7 +56,7 @@ function DestinationList(props) {
         </View>
         <SwipeListView
           style={styles.list}
-          key={item => item.index}
+          key={item => item.id}
           data={props.destinationList}
           renderItem={(item, rowMap) => {
             return (
