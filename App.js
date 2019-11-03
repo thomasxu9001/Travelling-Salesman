@@ -13,8 +13,13 @@ const App: () => React$Node = () => {
   }
   function addDestination(item) {
     let newList = [...destinationList];
-    newList.push(item);
-    setDestinationList(newList);
+    let matchAddress = newList.find(itemInList => {
+      return itemInList.formatted_address === item.formatted_address;
+    });
+    if (!matchAddress) {
+      newList.push(item);
+      setDestinationList(newList);
+    }
   }
   function removeDestination(index) {
     let newList = [...destinationList];

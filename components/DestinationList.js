@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 // import {pure} from 'recompose';
-import {StyleSheet, Text, View, Button} from 'react-native';
+import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {SwipeListView} from 'react-native-swipe-list-view';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -39,16 +39,20 @@ function DestinationList(props) {
       <>
         <View style={styles.titleContainer}>
           <Text style={styles.titleText}>Destinations</Text>
-          <View style={styles.title}>
-            <FontAwesome5 name={'directions'} style={styles.text} size={15} />
-            <Button
-              title="DIRECTIONS"
-              color={Colors.white}
-              onPress={() => {
-                getPath();
-              }}
+          <TouchableOpacity
+            style={styles.directionButton}
+            onPress={() => {
+              getPath();
+            }}>
+            <FontAwesome5
+              name={'directions'}
+              style={styles.directionsIcon}
+              size={18}
             />
-          </View>
+            <View>
+              <Text style={styles.text}>DIRECTIONS</Text>
+            </View>
+          </TouchableOpacity>
         </View>
         <SwipeListView
           style={styles.list}
@@ -57,7 +61,9 @@ function DestinationList(props) {
           renderItem={(item, rowMap) => {
             return (
               <View style={styles.row}>
-                <Text>{item.item.formatted_address}</Text>
+                <Text>{`(${item.index + 1}) ${
+                  item.item.formatted_address
+                }`}</Text>
               </View>
             );
           }}
@@ -84,16 +90,16 @@ function DestinationList(props) {
       <>
         <View style={styles.titleContainer}>
           <Text style={styles.titleText}>Solution</Text>
-          <View style={styles.title}>
-            <Ionicons name={'md-arrow-back'} style={styles.text} />
-            <Button
-              title="Back"
-              color={Colors.white}
-              onPress={() => {
-                togglePage(!showResult);
-              }}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.directionButton}
+            onPress={() => {
+              togglePage(!showResult);
+            }}>
+            <Ionicons name={'md-arrow-back'} style={styles.directionsIcon} />
+            <View>
+              <Text style={styles.text}>Back</Text>
+            </View>
+          </TouchableOpacity>
         </View>
         <View style={styles.list}>
           {solvedList &&
@@ -105,7 +111,9 @@ function DestinationList(props) {
                 );
               });
               return (
-                <Text key={key} style={styles.row}>{matchedItem.formatted_address}</Text>
+                <View key={key} style={styles.row}>
+                  <Text>{`(${key + 1}) ` + matchedItem.formatted_address}</Text>
+                </View>
               );
             })}
         </View>
@@ -137,13 +145,15 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: 'center',
   },
-  title: {
+  directionButton: {
     flexDirection: 'row',
     textAlign: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     color: Colors.white,
     borderRadius: 3,
     padding: 3,
+    marginRight: 10,
     backgroundColor: Colors.direction,
   },
   list: {
@@ -152,10 +162,15 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 25,
   },
+  directionsIcon: {
+    color: Colors.white,
+    marginRight: 5,
+  },
   text: {
     color: Colors.white,
   },
   row: {
+    paddingLeft: 5,
     backgroundColor: Colors.white,
     borderBottomColor: Colors.dark,
     borderBottomWidth: 1,

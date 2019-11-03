@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import { debounce } from "throttle-debounce";
 // import {pure} from 'recompose';
 import {
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 function SearchInput(props) {
   const options = {
     key: 'Your API KEY',
@@ -21,19 +23,21 @@ function SearchInput(props) {
   // const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [nextPageToken, setNextPageToken] = useState(null);
+  const [searchVal, setSearchVal] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   function getIndicator() {
-    if (nextPageToken) {
+    if (nextPageToken || loading) {
       return (
-        <View styles={styles.indicatorContainer}>
+        <View style={styles.indicatorContainer}>
           <ActivityIndicator style={styles.indicator} animating={true} />
-          <Text>Loading...</Text>
+          <Text style={styles.indicatorText}>Loading...</Text>
         </View>
       );
     }
     return (
-      <View styles={styles.indicatorContainer}>
-        <Text style={styles.indicator}> No more results. </Text>
+      <View style={styles.indicatorContainer}>
+        <Text style={styles.indicatorText}> No more results. </Text>
       </View>
     );
   }
@@ -58,17 +62,21 @@ function SearchInput(props) {
       .then(response => response.json())
       .then(responseJson => {
         data = Promise.resolve(responseJson);
+        setLoading(false);
       })
-      .catch(error => {
-      });
+      .catch(error => {});
     return data;
   }
 
   async function getPlaces(text) {
-    let queryParams = {...options, query: text};
-    let places = await getPlacesFromGoogle(queryParams);
-    setItems(places.results);
-    setNextPageToken(places.next_page_token);
+    setSearchVal(text.length ? text : null);
+    if (text && text.length >= 2) {
+      setLoading(true);
+      let queryParams = {...options, query: text};
+      let places = await getPlacesFromGoogle(queryParams);
+      setItems(places.results);
+      setNextPageToken(places.next_page_token);
+    }
   }
 
   async function getNextPagePlaces() {
@@ -87,7 +95,10 @@ function SearchInput(props) {
         onPress={() => {
           props.addDestination(item);
         }}>
-        <Text>{item.formatted_address}</Text>
+        <View style={styles.placeItem}>
+          <MaterialIcons style={styles.addPlaceIcon} name={'add-location'} />
+          <Text>{item.formatted_address}</Text>
+        </View>
       </TouchableOpacity>
     );
   }
@@ -97,24 +108,26 @@ function SearchInput(props) {
         <FontAwesome style={styles.searchIcon} name={'search'} />
         <TextInput
           style={styles.input}
-          onChangeText={text => getPlaces(text)}
+          onChangeText={text => debounce(300, getPlaces(text))}
           placeholder={'Search here'}
         />
       </View>
-      <FlatList
-        style={styles.itemList}
-        data={items}
-        renderItem={({item}) => placeItem(item)}
-        ListFooterComponent={() => getIndicator()}
-        onEndReached={() => getNextPagePlaces()}
-        initialListSize={20}
-        pageSize={20}
-        onEndReachedThreshold={0.01}
-        keyExtractor={item => item.id}
-      />
+      {searchVal && searchVal.length >= 2 && (
+        <FlatList
+          style={styles.itemList}
+          data={items}
+          renderItem={({item}) => placeItem(item)}
+          ListFooterComponent={() => getIndicator()}
+          onEndReached={() => getNextPagePlaces()}
+          initialListSize={20}
+          pageSize={20}
+          onEndReachedThreshold={0.01}
+          keyExtractor={item => item.id}
+        />
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -160,10 +173,35 @@ const styles = StyleSheet.create({
     maxHeight: 200,
   },
   indicatorContainer: {
+    justifyContent: 'center',
+    textAlign: 'center',
     alignItems: 'center',
   },
   indicator: {
     margin: 10,
+  },
+  indicatorText: {
+    justifyContent: 'center',
+    textAlign: 'center',
+    alignItems: 'center',
+    color: 'grey',
+  },
+  placeItem: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderBottomColor: Colors.dark,
+    borderBottomWidth: 1,
+    height: 35,
+    justifyContent: 'flex-start',
+    textAlign: 'center',
+    alignItems: 'center',
+  },
+  addPlaceIcon: {
+    color: Colors.white,
+    backgroundColor: '#52a3b0',
+    fontSize: 15,
+    marginRight: 10,
+    marginLeft: 10,
   },
 });
 
