@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
-import { debounce } from "throttle-debounce";
-// import {pure} from 'recompose';
+import {debounce} from 'throttle-debounce';
+import {pure} from 'recompose';
 import {
   StyleSheet,
   Text,
@@ -14,13 +14,6 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 function SearchInput(props) {
-  const options = {
-    key: 'Your API KEY',
-    region: 'nz',
-    types: ['address'],
-    fields: ['address_components', 'geometry.location', 'name'],
-  };
-  // const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [nextPageToken, setNextPageToken] = useState(null);
   const [searchVal, setSearchVal] = useState(null);
@@ -41,39 +34,14 @@ function SearchInput(props) {
       </View>
     );
   }
-  /**
-   * Convert an object into query parameters.
-   * @param {Object} object Object to convert.
-   * @returns {string} Encoded query parameters.
-   */
-  function toQueryParams(object) {
-    return Object.keys(object)
-      .filter(key => !!object[key])
-      .map(key => key + '=' + encodeURIComponent(object[key]))
-      .join('&');
-  }
-  async function getPlacesFromGoogle(queryParams) {
-    // build url
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${toQueryParams(
-      queryParams,
-    )}`;
-    let data;
-    await fetch(url)
-      .then(response => response.json())
-      .then(responseJson => {
-        data = Promise.resolve(responseJson);
-        setLoading(false);
-      })
-      .catch(error => {});
-    return data;
-  }
 
   async function getPlaces(text) {
     setSearchVal(text.length ? text : null);
     if (text && text.length >= 2) {
       setLoading(true);
-      let queryParams = {...options, query: text};
-      let places = await getPlacesFromGoogle(queryParams);
+      let queryParams = {...props.searchOptions, query: text};
+      let places = await props.getPlacesFromGoogle(queryParams);
+      setLoading(false);
       setItems(places.results);
       setNextPageToken(places.next_page_token);
     }
@@ -81,9 +49,10 @@ function SearchInput(props) {
 
   async function getNextPagePlaces() {
     if (nextPageToken) {
-      let queryParams = {...options, pagetoken: nextPageToken};
-      let places = await getPlacesFromGoogle(queryParams);
+      let queryParams = {...props.searchOptions, pagetoken: nextPageToken};
+      let places = await props.getPlacesFromGoogle(queryParams);
       Array.prototype.push.apply(items, places.results);
+      setLoading(false);
       setItems(items);
       setNextPageToken(places.next_page_token);
     }
@@ -205,4 +174,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchInput;
+export default pure(SearchInput);

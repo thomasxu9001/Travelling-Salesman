@@ -3,12 +3,24 @@ import {StyleSheet, View} from 'react-native';
 import Map from './Map';
 import SearchInput from './components/SearchInput';
 import DestinationList from './components/DestinationList';
+import ConfirmFooter from './components/ConfirmFooter';
 
 const App: () => React$Node = () => {
   const [isShow, setVisibility] = useState(true);
   const [destinationList, setDestinationList] = useState([]);
-
+  const [showFooter, setShowFooter] = useState(false);
+  const [pinedPlace, setPinedPlace] = useState();
+  const [markerDetail, setMarkerDetail] = useState();
+  const options = {
+    key: 'Your api key',
+    region: 'nz',
+    types: ['address'],
+    fields: ['address_components', 'geometry.location', 'name'],
+  };
   function toggleView() {
+    setPinedPlace(null);
+    setMarkerDetail(null);
+    setShowFooter(false);
     setVisibility(!isShow);
   }
   function addDestination(item) {
@@ -16,6 +28,7 @@ const App: () => React$Node = () => {
     let matchAddress = newList.find(itemInList => {
       return itemInList.formatted_address === item.formatted_address;
     });
+
     if (!matchAddress) {
       newList.push(item);
       setDestinationList(newList);
@@ -26,16 +39,94 @@ const App: () => React$Node = () => {
     newList.splice(index, 1);
     setDestinationList(newList);
   }
+  async function onLongPress(event) {
+    setVisibility(false);
+    setPinedPlace(event.coordinate);
+    let data;
+    let queryParams = {
+      ...options,
+      latlng: `${event.coordinate.latitude},${event.coordinate.longitude}`,
+    };
+    data = await getPlacesFromGoogleGeo(queryParams);
+    if (data.results && data.results.length > 0) {
+      setMarkerDetail(data.results[0]);
+      setShowFooter(true);
+    }
+  }
+  function onFooterConfirm() {
+    addDestination(markerDetail);
+    setShowFooter(false);
+    setVisibility(true);
+  }
+  function onFooterCancel() {
+    setPinedPlace(null);
+    setMarkerDetail(null);
+    setShowFooter(false);
+  }
+  /**
+   * Convert an object into query parameters.
+   * @param {Object} object Object to convert.
+   * @returns {string} Encoded query parameters.
+   */
+  function toQueryParams(object) {
+    return Object.keys(object)
+      .filter(key => !!object[key])
+      .map(key => key + '=' + encodeURIComponent(object[key]))
+      .join('&');
+  }
+  async function getPlacesFromGoogle(queryParams) {
+    // build url
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?${toQueryParams(
+      queryParams,
+    )}`;
+    let data;
+    await fetch(url)
+      .then(response => response.json())
+      .then(responseJson => {
+        data = Promise.resolve(responseJson);
+      })
+      .catch(error => {});
+    return data;
+  }
+
+  async function getPlacesFromGoogleGeo(queryParams) {
+    // build url
+    const url = `https://maps.google.com/maps/api/geocode/json?${toQueryParams(
+      queryParams,
+    )}`;
+    let data;
+    await fetch(url)
+      .then(response => response.json())
+      .then(responseJson => {
+        data = Promise.resolve(responseJson);
+      })
+      .catch(error => {});
+    return data;
+  }
+
   return (
-    <View style={styles.container}>
-      {isShow && <SearchInput addDestination={item => addDestination(item)} />}
+    <View style={isShow ? styles.container : styles.footerContainer}>
+      {isShow && (
+        <SearchInput
+          addDestination={item => addDestination(item)}
+          getPlacesFromGoogle={getPlacesFromGoogle}
+          searchOptions={options}
+        />
+      )}
 
-      <Map onPress={toggleView} />
-
+      <Map onPress={toggleView} onLongPress={onLongPress} marker={pinedPlace} />
       {isShow && (
         <DestinationList
           destinationList={destinationList}
           removeDestination={index => removeDestination(index)}
+        />
+      )}
+
+      {!isShow && showFooter && (
+        <ConfirmFooter
+          onCancle={onFooterCancel}
+          onConfirm={onFooterConfirm}
+          markerDetail={{...markerDetail}}
         />
       )}
     </View>
@@ -47,6 +138,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+
+  footerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
 });
 

@@ -6,10 +6,10 @@
  * @flow
  */
 
-import React, {useEffect} from 'react';
+import React from 'react';
 import {StyleSheet, View, Dimensions} from 'react-native';
 
-import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 
 const {width, height} = Dimensions.get('window');
 
@@ -36,8 +36,9 @@ function Map(props) {
           showsMyLocationButton={true}
           loadingEnabled={true}
           onPress={e => props.onPress(e.nativeEvent)}
-          onLongPress={e => console.log('long', e.nativeEvent)}
-        />
+          onLongPress={e => props.onLongPress(e.nativeEvent)}>
+          {props.marker && <Marker coordinate={props.marker} />}
+        </MapView>
       </View>
     </>
   );
